@@ -1,0 +1,163 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,700;0,900;1,400;1,700&family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;1,9..40,400&family=JetBrains+Mono:wght@400;500&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Theme Tokens ──────────────────────────────────────────────────────────── */
+:root {
+  --accent: #3b82f6;
+  --accent-glow: #60a5fa;
+  --accent-dim: #2563eb;
+  --accent-purple: #8b5cf6;
+  --amber: #f59e0b;
+
+  /* Light mode surfaces */
+  --bg-base: #f4f5f7;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f0f2f5;
+  --bg-border: #e2e5ec;
+  --text-primary: #111827;
+  --text-secondary: #4b5563;
+  --text-muted: #6b7280;
+  --blob-opacity: 0.15;
+  --card-glass: rgba(255,255,255,0.72);
+  --card-glass-border: rgba(59,130,246,0.25);
+  --noise-opacity: 0.025;
+}
+
+.dark {
+  --bg-base: #0f1117;
+  --bg-card: #161821;
+  --bg-card-hover: #1e2130;
+  --bg-border: #2a2d3a;
+  --text-primary: #f3f4f6;
+  --text-secondary: #d1d5db;
+  --text-muted: #9ca3af;
+  --blob-opacity: 0.18;
+  --card-glass: rgba(22,24,33,0.72);
+  --card-glass-border: rgba(59,130,246,0.3);
+  --noise-opacity: 0.04;
+}
+
+/* ── Base Resets ────────────────────────────────────────────────────────────── */
+*, *::before, *::after {
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: 'DM Sans', system-ui, sans-serif;
+  background-color: var(--bg-base);
+  color: var(--text-primary);
+  min-height: 100vh;
+  position: relative;
+  overflow-x: hidden;
+  transition: background-color 0.4s ease, color 0.4s ease;
+}
+
+/* ── Noise Overlay (SVG-based, zero-perf cost) ─────────────────────────────── */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 999;
+  opacity: var(--noise-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+}
+
+/* ── Scrollbar ──────────────────────────────────────────────────────────────── */
+::-webkit-scrollbar          { width: 6px; }
+::-webkit-scrollbar-track    { background: transparent; }
+::-webkit-scrollbar-thumb    { background: var(--accent); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--accent-dim); }
+
+/* ── Focus Ring (keyboard nav) ──────────────────────────────────────────────── */
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* ── Reduced Motion ─────────────────────────────────────────────────────────── */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+  html { scroll-behavior: auto; }
+}
+
+/* ── Utility: gradient text ─────────────────────────────────────────────────── */
+.gradient-text {
+  background: linear-gradient(135deg, var(--accent), var(--accent-purple));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* ── Utility: glass card ────────────────────────────────────────────────────── */
+.glass-card {
+  background: var(--card-glass);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid var(--card-glass-border);
+  border-radius: 16px;
+  box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+  transition: box-shadow 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.glass-card:hover {
+  box-shadow: 0 8px 40px rgba(59,130,246,0.15), 0 2px 12px rgba(0,0,0,0.1);
+  transform: translateY(-2px) scale(1.015);
+  border-color: var(--accent);
+}
+
+/* Spotlight effect inside cards (cursor-tracked via JS) */
+.glass-card .spotlight {
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.4s ease;
+  background: radial-gradient(circle at var(--spotlight-x, 50%) var(--spotlight-y, 50%), rgba(59,130,246,0.12) 0%, transparent 70%);
+}
+
+.glass-card:hover .spotlight {
+  opacity: 1;
+}
+
+/* ── Utility: animated gradient border (pseudo-element ring) ─────────────── */
+.gradient-border-card {
+  position: relative;
+}
+.gradient-border-card::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: calc(16px + 1px);
+  padding: 1px;
+  background: linear-gradient(135deg, var(--accent), var(--accent-purple), var(--amber));
+  -webkit-mask:
+    linear-gradient(#fff 0 0) content-box,
+    linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.gradient-border-card:hover::before {
+  opacity: 1;
+}
